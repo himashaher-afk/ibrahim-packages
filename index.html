@@ -49,6 +49,21 @@ async function loadPackagesFromFirebase(){
   } catch(e){ console.error(e); }
 }
 loadPackagesFromFirebase();
+// تحميل لينك InstaPay
+async function loadInstapayLink(){
+  try {
+    const {getDoc,doc} = await import('https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js');
+    const snap = await getDoc(doc(db,'config','instapayLink'));
+    if(snap.exists()){
+      const link = snap.data().url || '';
+      if(link){
+        const btn = document.getElementById('instapay-link-btn');
+        if(btn){ btn.href = link; btn.style.display='block'; }
+      }
+    }
+  } catch(e){ console.warn('instapay link:',e); }
+}
+loadInstapayLink();
 window.dispatchEvent(new Event('firebase-ready'));
 </script>
 <style>
@@ -185,6 +200,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .pane{display:none;animation:fadeUp .35s ease;}
 .pane.active{display:block;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse-indigo{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,0.4)}50%{box-shadow:0 0 0 8px rgba(99,102,241,0)}}
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:#1A1A2E;color:#fff;border-radius:12px;padding:11px 22px;font-size:0.86rem;font-weight:600;z-index:999;transition:transform .3s;box-shadow:0 8px 30px rgba(0,0,0,0.2);white-space:nowrap;}
 .toast.show{transform:translateX(-50%) translateY(0);}
 .toast.err{background:#EF4444;}
@@ -304,6 +320,9 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
           <div class="pay-sub">InstaPay Transfer</div>
           <div class="pay-num-box" id="instapay-num-box" onclick="copyNum(event,'instapay')"><span id="instapay-num-text"></span><span>📋</span></div>
           <div class="copy-hint" id="instapay-copy-hint" style="display:none;">اضغط للنسخ</div>
+          <a id="instapay-link-btn" href="#" target="_blank" onclick="event.stopPropagation();" style="display:none;margin-top:10px;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;border-radius:12px;padding:9px 14px;font-size:0.82rem;font-weight:900;text-decoration:none;text-align:center;width:100%;box-sizing:border-box;">
+            الدفع عن طريق إنستا باي<br><span style="font-size:1.2rem;">اضغط هنا ↓</span>
+          </a>
         </div>
       </div>
       <div id="transfer-section" style="display:none;margin-top:18px;">
@@ -516,7 +535,7 @@ function renderPackages(net){
   }).join('');
 }
 document.getElementById('pkgs-grid').addEventListener('click',function(e){const card=e.target.closest('.pkg-card[data-pkgid]');if(!card)return;selectPkg(card.dataset.pkgid);});
-function selectPkg(id){const net=state.network;const p=PACKAGES[net]?.find(x=>x.id===id);if(!p)return;state.pkg=p;document.querySelectorAll('.pkg-card').forEach(c=>c.classList.remove('selected'));const el=document.getElementById('pk-'+id);if(el)el.classList.add('selected');document.getElementById('pane1-nav').style.display='flex';updatePayNumbers(p);setTimeout(function(){document.getElementById('pane1-nav').scrollIntoView({behavior:'smooth',block:'center'});},300);}
+function selectPkg(id){const net=state.network;const p=PACKAGES[net]?.find(x=>x.id===id);if(!p)return;state.pkg=p;document.querySelectorAll('.pkg-card').forEach(c=>c.classList.remove('selected'));const el=document.getElementById('pk-'+id);if(el)el.classList.add('selected');document.getElementById('pane1-nav').style.display='flex';updatePayNumbers(p);}
 function updatePayNumbers(p){const wb=document.getElementById('wallet-num-box');const wh=document.getElementById('wallet-copy-hint');if(p.walletNumber){document.getElementById('wallet-num-text').textContent=p.walletNumber;wb.classList.add('visible');wh.style.display='block';}else{wb.classList.remove('visible');wh.style.display='none';}const ib=document.getElementById('instapay-num-box');const ih=document.getElementById('instapay-copy-hint');if(p.instapayNumber){document.getElementById('instapay-num-text').textContent=p.instapayNumber;ib.classList.add('visible');ih.style.display='block';}else{ib.classList.remove('visible');ih.style.display='none';}}
 function selectPay(method){state.payMethod=method;document.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('selected'));document.getElementById('pay-'+method).classList.add('selected');document.getElementById('transfer-section').style.display='block';}
 function copyNum(e,type){e.stopPropagation();const n=document.getElementById(type+'-num-text')?.textContent?.trim();if(!n)return;navigator.clipboard.writeText(n).then(()=>toast('✅ تم نسخ الرقم: '+n,'ok')).catch(()=>{const t=document.createElement('textarea');t.value=n;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);toast('✅ تم نسخ الرقم: '+n,'ok');});}
