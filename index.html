@@ -58,7 +58,10 @@ async function loadInstapayLink(){
       const link = snap.data().url || '';
       if(link){
         const btn = document.getElementById('instapay-link-btn');
-        if(btn){ btn.href = link; btn.style.display='block'; }
+        const wrap = document.getElementById('instapay-link-wrap');
+        if(btn) btn.href = link;
+        if(wrap) wrap.style.display = 'block';
+        window._instapayLink = link;
       }
     }
   } catch(e){ console.warn('instapay link:',e); }
@@ -318,11 +321,15 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
           <div class="pay-icon">💜</div>
           <div class="pay-name">إنستا باي</div>
           <div class="pay-sub">InstaPay Transfer</div>
+          <div style="margin-top:8px;font-size:0.75rem;color:#6B7280;text-align:center;line-height:1.6;">لو حابب تحول من إنستا باي بالرقم</div>
           <div class="pay-num-box" id="instapay-num-box" onclick="copyNum(event,'instapay')"><span id="instapay-num-text"></span><span>📋</span></div>
           <div class="copy-hint" id="instapay-copy-hint" style="display:none;">اضغط للنسخ</div>
-          <a id="instapay-link-btn" href="#" target="_blank" onclick="event.stopPropagation();" style="display:none;margin-top:10px;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;border-radius:12px;padding:9px 14px;font-size:0.82rem;font-weight:900;text-decoration:none;text-align:center;width:100%;box-sizing:border-box;">
-            الدفع عن طريق إنستا باي<br><span style="font-size:1.2rem;">اضغط هنا ↓</span>
-          </a>
+          <div id="instapay-link-wrap" style="display:none;">
+            <div style="margin-top:10px;font-size:0.75rem;color:#6B7280;text-align:center;line-height:1.6;">لو حابب تحول من إنستا باي بالرابط المباشر</div>
+            <a id="instapay-link-btn" href="#" target="_blank" onclick="event.stopPropagation();openInstapayLink(event);" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;border-radius:12px;padding:10px 14px;font-size:0.85rem;font-weight:900;text-decoration:none;text-align:center;width:100%;box-sizing:border-box;">
+              اضغط هنا 👇
+            </a>
+          </div>
         </div>
       </div>
       <div id="transfer-section" style="display:none;margin-top:18px;">
@@ -576,6 +583,13 @@ function submitOrder(){
 }
 function resetForm(){state={network:'',pkg:null,payMethod:'',fromPhone:'',receiptData:null,name:'',phone:'',notes:''};document.getElementById('success-screen').classList.remove('show');document.querySelectorAll('.net-card').forEach(c=>c.className='net-card');document.getElementById('pkgs-section').style.display='none';document.getElementById('pane1-nav').style.display='none';document.getElementById('transfer-section').style.display='none';document.getElementById('upload-preview').style.display='none';['from-phone','cust-name','cust-phone','cust-notes'].forEach(id=>document.getElementById(id).value='');document.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('selected'));document.getElementById('submit-btn').disabled=false;document.getElementById('submit-btn').textContent='✅ تأكيد الطلب';showPane(1);}
 document.getElementById('from-phone').addEventListener('input',e=>state.fromPhone=e.target.value.trim());
+function openInstapayLink(e){
+  e.preventDefault();
+  e.stopPropagation();
+  const link = window._instapayLink;
+  if(!link) return;
+  window.open(link, '_blank');
+}
 function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type+' show';setTimeout(()=>t.classList.remove('show'),3000);}
 </script>
 </body>
